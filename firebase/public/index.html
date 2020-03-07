@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Bathroom status</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <script defer src="/__/firebase/5.7.3/firebase-app.js"></script>
+    <script defer src="/__/firebase/5.7.3/firebase-database.js"></script>
+    <script defer src="/__/firebase/init.js"></script>
+    <style>
+        .tabular {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="display-4">Bathroom status</h1>
+      <div id="stall0" class="tabular alert text-center display-4">
+      </div>
+      <div id="stall1" class="tabular alert text-center display-4">
+      </div>
+      <div id="stall2" class="tabular alert text-center display-4">
+      </div>
+      <div id="stall3" class="tabular alert text-center display-4">
+      </div>
+    </div>
+    <script>
+      var offset = 0;
+      var stalls = null;
+
+      function format_time(ms) {
+        var seconds = Math.floor(ms / 1000);
+        var h = Math.floor(seconds / 3600);
+        var m = Math.floor((seconds % 3600) / 60);
+        var s = seconds % 60;
+        if (m < 10) { m = "0"+m; }
+        if (s < 10) { s = "0"+s; }
+        return (h > 0 ? h + ':' : '')+m+':'+s;
+      }
+
+      function update_display() {
+        if (stalls === null) {
+          return;
+        }
+
+        for (i = 0; i < 4; i++) {
+          $('#stall'+i).removeClass(stalls[i]['occupied'] ? 'alert-success' : 'alert-danger').addClass(stalls[i]['occupied'] ? 'alert-danger' : 'alert-success');
+          $('#stall'+i).html('<i class="material-icons" style="font-size: 36px;">'+(stalls[i]['occupied'] ? 'lock' : 'lock_open')+'</i>'+format_time(new Date().getTime() + offset - stalls[i]['timestamp']));
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        firebase.database().ref('stalls').on('value', function(snapshot) { stalls = snapshot.val(); update_display(); });
+        firebase.database().ref('.info/serverTimeOffset').on('value', function(snapshot) { offset = snapshot.val() });
+        setInterval(update_display, 1000);
+      });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  </body>
+</html>
